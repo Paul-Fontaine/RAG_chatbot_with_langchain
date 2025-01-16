@@ -1,0 +1,6 @@
+langchain-text-splitters
+langchain-community
+langgraph
+langchain-ollama
+langchain-chroma
+beautifulsoup4
