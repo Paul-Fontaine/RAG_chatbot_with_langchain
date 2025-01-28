@@ -16,7 +16,8 @@ prompt = ChatPromptTemplate.from_messages([
                "Utilises les éléments de contexte suivants pour répondre à la question. Si tu ne connais pas la réponse, dis-le simplement."
                "Essaie de répondre de manière concise et précise."),
     ("human", "{question}"),
-    ("system", "Voici les éléments de contexte our répondre à la question : {context}"),
+    ("system", "Voici les éléments de contexte our répondre à la question : {context}"
+               "Ainsi aue les messages précédents : {history}"),
 ])
 
 # Define state for application
@@ -24,6 +25,7 @@ class State(TypedDict):
     question: str
     context: List[Document]
     answer: str
+    history: List[dict]
 
 
 # Define application steps
@@ -33,14 +35,28 @@ def retrieve(state: State):
 
 
 def generate(state: State):
+    try:
+        history_content = "\n".join(f"Question: {h['question']}\nRéponse: {h['answer']}" for h in state["history"])
+    except KeyError:
+        history_content = "Aucune question n'a été posée jusqu'à présent."
     docs_content = "\n\n".join(doc.page_content for doc in state["context"])
-    messages = prompt.invoke({"question": state["question"], "context": docs_content})
+
+    messages = prompt.invoke({"question": state["question"], "context": docs_content, "history": history_content})
     response = llm.invoke(messages)
+
     return {"answer": response}
 
 
+def update_history(state: State):
+    try:
+        updated_history = state["history"] + [{"question": state["question"], "answer": state["answer"]}]
+    except KeyError:
+        updated_history = [{"question": state["question"], "answer": state["answer"]}]
+    return {"history": updated_history}
+
+
 # Compile application and test
-graph_builder = StateGraph(State).add_sequence([retrieve, generate])
+graph_builder = StateGraph(State).add_sequence([retrieve, generate, update_history])
 graph_builder.add_edge(START, "retrieve")
 graph = graph_builder.compile()
 
