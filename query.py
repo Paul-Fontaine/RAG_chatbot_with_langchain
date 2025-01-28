@@ -2,14 +2,22 @@ from langchain import hub
 from langchain_core.documents import Document
 from langgraph.graph import START, StateGraph
 from typing_extensions import List, TypedDict
+from langchain_core.prompts import ChatPromptTemplate
 
 from scrapping import vector_store
 from setup import llm
 
 
 # Define prompt for question-answering
-prompt = hub.pull("rlm/rag-prompt")
+# prompt = hub.pull("rlm/rag-prompt")
 
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "tu es un assistant IA prêt à répondre à toutes mes questions concernant le manuel de gestion de l'UQAC. "
+               "Utilises les éléments de contexte suivants pour répondre à la question. Si tu ne connais pas la réponse, dis-le simplement."
+               "Essaie de répondre de manière concise et précise."),
+    ("human", "{question}"),
+    ("system", "Voici les éléments de contexte our répondre à la question : {context}"),
+])
 
 # Define state for application
 class State(TypedDict):
