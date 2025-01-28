@@ -7,5 +7,7 @@ print("question:", question)
 
 print("answering ...")
 response = graph.invoke({"question": question})
-print(response["answer"])
-print("source:", response['context'][0].metadata['source'])
+answer = response["answer"]
+sources = set([doc.metadata['source'] for doc in response['context'] if doc.metadata['source'] is not None])
+print("réponse :\n", answer)
+print("\nsources : \n", "\n".join(sources))
