@@ -22,8 +22,3 @@ all_splits = web_splits
 
 # Index chunks
 _ = vector_store.add_documents(documents=all_splits)
-
-# print(vector_store.get()['documents'][2])
-# print(vector_store.get()['metadatas'][2]['source'])
-
-print("scrapping done")
