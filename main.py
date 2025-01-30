@@ -13,8 +13,7 @@ def ask_question(question: str):
     print(reponse)
 
 while True:
-    # question = str(input("question :\n"))
-    question = "Quelle est la langue de travail de l'UQAC ?"
+    question = str(input("question :\n"))
     if question == "exit":
         break
     ask_question(question)

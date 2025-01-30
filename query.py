@@ -3,6 +3,9 @@ from langchain_core.documents import Document
 from langgraph.graph import START, StateGraph
 from typing_extensions import List, TypedDict
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+
 
 from setup import llm, vector_store
 
@@ -12,21 +15,17 @@ from setup import llm, vector_store
 
 # todo: améliorer ce prompt
 # todo: utiliser https://python.langchain.com/docs/how_to/chatbots_memory/ pour la mémoire des questions précédentes
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "tu es un assistant IA prêt à répondre à toutes mes questions concernant le manuel de gestion de l'UQAC. "
-               "Utilises les éléments de contexte suivants pour répondre à la question. Si tu ne connais pas la réponse, dis-le simplement."
-               "Essaie de répondre de manière précise en reprenant qusi mot pour mot les éléments de contexte lorsque c'est pertinent."),
-    ("human", "{question}"),
-    ("system", "Voici les éléments de contexte pour répondre à la question : {context}"
-               "Ainsi que les messages précédents : {history}"),
-])
+preprompt = ("Tu es un assistant IA RAG prêt à répondre à toutes les questions concernant le manuel de gestion de l'UQAC."
+             "Des éléments de contexte te seront fournis à chaque question, appuies toi dessus pour répondre.")
+
+chat_memory = InMemoryChatMessageHistory()
+chat_memory.add_message(SystemMessage(preprompt))
 
 # Define state for application
 class State(TypedDict):
     question: str
     context: List[Document]
     answer: str
-    history: List[dict]
 
 
 # Define application steps
@@ -36,27 +35,25 @@ def retrieve(state: State):
 
 
 def generate(state: State):
-    try:
-        history_content = "\n".join(f"Question: {h['question']}\nRéponse: {h['answer']}" for h in state["history"])
-    except KeyError:
-        history_content = "Aucune question n'a été posée jusqu'à présent."
     docs_content = "\n\n".join(doc.page_content for doc in state["context"])
 
-    messages = prompt.invoke({"question": state["question"], "context": docs_content, "history": history_content})
+    question = HumanMessage(state["question"])
+    context = SystemMessage("Voici les éléments de contexte : \n" + docs_content)
+    messages = [
+        *chat_memory.messages,
+        question,
+        context
+    ]
     response = llm.invoke(messages)
+
+    chat_memory.add_message(question)
+    chat_memory.add_message(context)
+    chat_memory.add_message(AIMessage(response))
 
     return {"answer": response}
 
 
-def update_history(state: State):
-    try:
-        updated_history = state["history"] + [{"question": state["question"], "answer": state["answer"]}]
-    except KeyError:
-        updated_history = [{"question": state["question"], "answer": state["answer"]}]
-    return {"history": updated_history}
-
-
 # Compile application and test
-graph_builder = StateGraph(State).add_sequence([retrieve, generate, update_history])
+graph_builder = StateGraph(State).add_sequence([retrieve, generate])
 graph_builder.add_edge(START, "retrieve")
 graph = graph_builder.compile()

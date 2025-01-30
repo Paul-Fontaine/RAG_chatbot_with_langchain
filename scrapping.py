@@ -3,7 +3,13 @@ from langchain_community.document_loaders import WebBaseLoader
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from setup import vector_store
+from setup import  Chroma, embeddings
+
+vector_store = Chroma(
+    collection_name="langchain",
+    embedding_function=embeddings,
+    persist_directory="./DB",
+)
 
 web_loader = WebBaseLoader(
     web_paths=("https://www.uqac.ca/mgestion/chapitre-2/reglement-sur-la-mission-et-les-valeurs-de-luqac/politique-de-developpement-durable/",),
