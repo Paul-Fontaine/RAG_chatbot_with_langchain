@@ -13,7 +13,7 @@ def ask_question(question: str):
 
     print(reponse)  
 
-    return {"reponse":reponse, "sources":sources}
+    return reponse
 
 st.title("💬 Chatbot LLM")
 
@@ -40,5 +40,5 @@ if user_input := st.chat_input("Posez une question..."):
     # Ajouter et afficher immédiatement la réponse
     st.session_state.messages.append({"role": "assistant", "content": bot_reply})
     with st.chat_message("assistant"):
-        st.write(bot_reply["reponse"])
-        st.write(bot_reply["sources"])
+        st.write(bot_reply)
+        
