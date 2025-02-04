@@ -22,7 +22,7 @@ def retrieve(state: State):
     """
     Récupère les documents pertinents depuis Chroma en fonction de la question.
     """
-    retrieved_docs = vector_store.similarity_search(state["question"], k=4)
+    retrieved_docs = vector_store.similarity_search(state["question"], k=3)
     return {"context": retrieved_docs}
 
 def generate(state: State):

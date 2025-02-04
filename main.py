@@ -1,17 +1,17 @@
 from query import graph
 import streamlit as st
 
+
 def ask_question(question: str):
     print("answering ...")
     response = graph.invoke({"question": question})
     answer = response["answer"]
     sources = set([doc.metadata['source'] for doc in response['context'] if doc.metadata['source'] is not None])
-
-    sources_text = "\n".join(sources)  # Construire d'abord la chaîne de sources séparément
-
-    reponse = f"réponse :\n{answer}\n\nsources :\n{sources_text}\n"  # Insérer la variable dans la f-string
-
-    print(reponse)  
+    reponse = (f"réponse :\n"
+               f"{answer}\n"
+               f"sources : \n"
+               f"{"\n".join(sources)}\n")
+    print(reponse)
 
     return reponse
 
@@ -41,4 +41,9 @@ if user_input := st.chat_input("Posez une question..."):
     st.session_state.messages.append({"role": "assistant", "content": bot_reply})
     with st.chat_message("assistant"):
         st.write(bot_reply)
-        
+
+
+# Quels sont les objectifs de la politique de développement durable de l'UQAC ?
+# Qui est responsable de son application ?
+# Quelle est la définition du développement durable  dans le manuel de gestion de l'uqac?
+# Quelles sont les principales fonctions du Comité de mise en œuvre du développement durable ?
